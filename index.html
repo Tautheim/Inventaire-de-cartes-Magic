@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Gestionnaire Magic</title>
+</head>
+<body>
+    <header>
+        <div class="Title">
+            <h1>Gestionnaire de cartes Magic</h1>
+            <p>Cette application non officielle permet de tenir un inventaire de sa collection de cartes Magic</p>
+        </div>
+    </header>
+    <main>
+        <div class="Buttons">
+            <button id="Filtrer">Filtrer</button>
+            <button id="Ajouter" aria-label="Ajouter une carte">Ajouter une carte</button>
+            <button id="Afficher" aria-label="Afficher la carte">Afficher la carte</button>
+            <button id="Exporter">Exporter le tableau</button>
+        </div>
+        <div class="TableauTitle">
+            <h1>Tableau d'inventaire des cartes</h1>
+            <p>Ce tableau permet de renseigner l'ensemble des cartes d'une collection grâce à la base de données de l'API Scryfall. Il permet donc d'avoir un inventaire complet des cartes qui la composent pour simplifier la conception de decks, la complétion d'une collection ou encore la vente/l'échange de cartes.</p>
+        </div>
+        <div class="Tableau">
+            <table id="TableauCarte" aria-label="Tableau d'inventaire des cartes">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Extension</th>
+                        <th>Couleur</th>
+                        <th>Coût</th>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Atq</th>
+                        <th>Def</th>
+                        <th>Compétences</th>
+                        <th>Texte</th>
+                        <th>Rareté</th>
+                        <th>Quantité</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal -->
+        <div id="myModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+            <div class="modal-content">
+                <span class="close" aria-label="Fermer">&times;</span>
+                <h1 id="modalTitle">Ajouter une carte</h1>
+                <p id="modalDescription">Veuillez renseigner l'extension de la carte et son numéro pour la retrouver dans la base de données.</p>
+                <form id="addCardForm">
+                    <label for="extension">Extension :</label>
+                    <select id="extension" name="extension" aria-label="Sélectionner une extension">
+                        <option value="" disabled selected>Choisissez une extension</option>
+                    </select><br><br>
+                    <label for="numero">Numéro de la carte :</label>
+                    <input type="text" id="numero" name="numero" required aria-label="Numéro de la carte"><br><br>
+                    <button type="button" id="popupAjouter" aria-label="Ajouter la carte">Ajouter</button>
+                </form>
+                <div id="cardPreview" style="display: none;">
+                    <div id="cardDetails"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal pour afficher l'illustration de la carte -->
+        <div id="cardModal" class="modal" role="dialog" aria-labelledby="cardModalTitle" aria-describedby="cardModalDescription">
+            <div class="modal-content">
+                <span class="close" aria-label="Fermer">&times;</span>
+                <h1 id="cardModalTitle">Visuel de la carte</h1>
+                <img id="cardImage" src="" alt="Image de la carte">
+            </div>
+        </div>
+        
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
