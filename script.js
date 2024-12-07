@@ -83,33 +83,54 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction pour ajouter les informations de la carte dans le tableau
     function addCardToTable() {
         if (currentCard) {
-            const row = document.createElement('tr');
-            const cardImageUrl = currentCard.image_uris ? currentCard.image_uris.normal : '';
-            row.innerHTML = `
-                <td>${currentCard.collector_number}</td>
-                <td>${currentCard.set_name}</td>
-                <td>${currentCard.colors ? currentCard.colors.join(', ') : 'N/A'}</td>
-                <td>${currentCard.mana_cost ? currentCard.mana_cost : 'N/A'}</td>
-                <td>${currentCard.name}</td>
-                <td>${currentCard.type_line}</td>
-                <td>${currentCard.power ? currentCard.power : 'N/A'}</td>
-                <td>${currentCard.toughness ? currentCard.toughness : 'N/A'}</td>
-                <td>${currentCard.oracle_text ? currentCard.oracle_text.replace(/\n/g, '<br>') : 'N/A'}</td>
-                <td>${currentCard.flavor_text ? currentCard.flavor_text.replace(/\n/g, '<br>') : 'N/A'}</td>
-                <td>${currentCard.rarity}</td>
-                <td>
-                    <button class="decrease-button">-</button>
-                    <span class="quantity">1</span>
-                    <button class="increase-button">+</button>
-                </td>
-                <td>
-                    <input type="radio" name="cardSelection" class="card-selection" data-image-url="${cardImageUrl}">
-                    <button class="remove-button"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            `;
-            tableauCarte.appendChild(row);
+            const cardData = {
+                collector_number: currentCard.collector_number,
+                set_name: currentCard.set_name,
+                colors: currentCard.colors,
+                mana_cost: currentCard.mana_cost,
+                name: currentCard.name,
+                type_line: currentCard.type_line,
+                power: currentCard.power,
+                toughness: currentCard.toughness,
+                oracle_text: currentCard.oracle_text,
+                flavor_text: currentCard.flavor_text,
+                rarity: currentCard.rarity,
+                quantity: 1,
+                image_url: currentCard.image_uris ? currentCard.image_uris.normal : ''
+            };
+            addCardToTableFromData(cardData);
+            saveCardToFirebase(cardData);
             closeModalFunc();
         }
+    }
+
+    // Fonction pour ajouter les informations de la carte dans le tableau à partir des données
+    function addCardToTableFromData(cardData) {
+        const row = document.createElement('tr');
+        row.dataset.key = cardData.key; // Ajouter la clé comme attribut de données
+        row.innerHTML = `
+            <td>${cardData.collector_number}</td>
+            <td>${cardData.set_name}</td>
+            <td>${cardData.colors ? cardData.colors.join(', ') : 'N/A'}</td>
+            <td>${cardData.mana_cost ? cardData.mana_cost : 'N/A'}</td>
+            <td>${cardData.name}</td>
+            <td>${cardData.type_line}</td>
+            <td>${cardData.power ? cardData.power : 'N/A'}</td>
+            <td>${cardData.toughness ? cardData.toughness : 'N/A'}</td>
+            <td>${cardData.oracle_text ? cardData.oracle_text.replace(/\n/g, '<br>') : 'N/A'}</td>
+            <td>${cardData.flavor_text ? cardData.flavor_text.replace(/\n/g, '<br>') : 'N/A'}</td>
+            <td>${cardData.rarity}</td>
+            <td>
+                <button class="decrease-button">-</button>
+                <span class="quantity">${cardData.quantity}</span>
+                <button class="increase-button">+</button>
+            </td>
+            <td>
+                <input type="radio" name="cardSelection" class="card-selection" data-image-url="${cardData.image_url}">
+                <button class="remove-button"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        `;
+        tableauCarte.appendChild(row);
     }
 
     // Fonction pour ouvrir le modal de l'image de la carte
@@ -124,6 +145,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction pour fermer le modal de l'image de la carte
     function closeCardModal() {
         cardModal.style.display = 'none';
+    }
+
+    // Fonction pour charger les cartes depuis Firebase
+    function loadCardsFromFirebase() {
+        onValue(cardsRef, (snapshot) => {
+            tableauCarte.innerHTML = ''; // Effacer le tableau existant
+            const cards = snapshot.val();
+            if (cards) {
+                Object.keys(cards).forEach(key => {
+                    const cardData = cards[key];
+                    cardData.key = key; // Ajouter la clé pour identifier la carte
+                    addCardToTableFromData(cardData);
+                });
+            }
+        });
+    }
+
+    // Fonction pour sauvegarder une carte dans Firebase
+    function saveCardToFirebase(cardData) {
+        push(cardsRef, cardData);
     }
 
     // Événements
@@ -155,6 +196,8 @@ document.addEventListener('DOMContentLoaded', function() {
     tableauCarte.addEventListener('click', function(event) {
         if (event.target.classList.contains('remove-button') || event.target.parentElement.classList.contains('remove-button')) {
             const row = event.target.closest('tr');
+            const cardKey = row.dataset.key;
+            remove(ref(database, `cards/${cardKey}`));
             row.remove();
         }
     });
@@ -165,11 +208,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const quantitySpan = event.target.parentElement.querySelector('.quantity');
             let quantity = parseInt(quantitySpan.textContent);
             quantitySpan.textContent = quantity + 1;
+            const row = event.target.closest('tr');
+            const cardKey = row.dataset.key;
+            update(ref(database, `cards/${cardKey}/quantity`), quantity + 1);
         } else if (event.target.classList.contains('decrease-button')) {
             const quantitySpan = event.target.parentElement.querySelector('.quantity');
             let quantity = parseInt(quantitySpan.textContent);
             if (quantity > 1) {
                 quantitySpan.textContent = quantity - 1;
+                const row = event.target.closest('tr');
+                const cardKey = row.dataset.key;
+                update(ref(database, `cards/${cardKey}/quantity`), quantity - 1);
             }
         }
     });
@@ -180,4 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedCardRow = event.target.closest('tr');
         }
     });
+
+    // Charger les cartes depuis Firebase au démarrage
+    loadCardsFromFirebase();
 });
